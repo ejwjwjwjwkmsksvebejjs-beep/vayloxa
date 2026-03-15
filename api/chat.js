@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -21,7 +22,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model: "gpt-4.1",   // ← الأفضل والأدق
         input: message,
       }),
     });
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
 
     console.log("RAW OPENAI RESPONSE:", data);
 
-    // استخراج الرد من كل الأماكن المحتملة
+    // التقاط الرد من كل الأماكن المحتملة
     const reply =
       data.output_text ||
       data.output?.[0]?.content?.[0]?.text ||
