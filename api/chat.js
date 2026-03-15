@@ -1,15 +1,12 @@
 export default async function handler(req, res) {
-  // السماح لـ Framer بالاتصال (CORS)
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // رد على طلبات OPTIONS (مهم جدًا)
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  // السماح فقط بـ POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -17,7 +14,6 @@ export default async function handler(req, res) {
   const { message } = req.body;
 
   try {
-    // إرسال الرسالة إلى OpenAI
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -32,14 +28,14 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // استخراج الرد
+    // استخراج الرد من أي مكان محتمل
     const reply =
       data.output_text ||
-      data.output ||
+      data.output?.[0]?.content?.[0]?.text ||
       data.response ||
-      "No response";
+      data.choices?.[0]?.message?.content ||
+      "ما قدرت أفهم الرد";
 
-    // إعادة الرد إلى Framer
     return res.status(200).json({ reply });
   } catch (error) {
     console.error("API Error:", error);
