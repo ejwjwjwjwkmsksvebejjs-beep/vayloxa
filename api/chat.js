@@ -1,52 +1,48 @@
 export default async function handler(req, res) {
+  // السماح لـ Framer بالاتصال (CORS)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // رد على طلبات OPTIONS (مهم جدًا)
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  // السماح فقط بـ POST
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   const { message } = req.body;
 
-  if (!message) {
-    return res.status(400).json({ error: "No message provided" });
-  }
-
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    // إرسال الرسالة إلى OpenAI
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
-        messages: [
-          {
-            role: "system",
-            content: `
-You are an all-in-one AI business assistant.
-You help with:
-- project planning
-- financial management
-- stock analysis
-- investment recommendations
-- business decisions
-Always respond in a structured, clear way.
-            `,
-          },
-          {
-            role: "user",
-            content: message,
-          },
-        ],
+        input: message,
       }),
     });
 
     const data = await response.json();
 
-    const reply = data.choices?.[0]?.message?.content || "No response";
+    // استخراج الرد
+    const reply =
+      data.output_text ||
+      data.output ||
+      data.response ||
+      "No response";
 
+    // إعادة الرد إلى Framer
     return res.status(200).json({ reply });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Something went wrong" });
+    console.error("API Error:", error);
+    return res.status(500).json({ error: "Server Error" });
   }
 }
