@@ -28,12 +28,14 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // استخراج الرد من أي مكان محتمل
+    // التقاط الرد من كل الأماكن المحتملة
     const reply =
       data.output_text ||
       data.output?.[0]?.content?.[0]?.text ||
+      data.output?.[0]?.content?.[0]?.value ||
       data.response ||
       data.choices?.[0]?.message?.content ||
+      data.choices?.[0]?.text ||
       "ما قدرت أفهم الرد";
 
     return res.status(200).json({ reply });
