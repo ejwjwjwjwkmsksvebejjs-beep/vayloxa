@@ -15,31 +15,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: message }],
-      }),
-    });
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
+        process.env.GEMINI_API_KEY,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: message }] }],
+        }),
+      }
+    );
 
     const data = await response.json();
 
-    console.log("🤖 RAW OPENAI RESPONSE:", data);
+    console.log("🤖 RAW GEMINI RESPONSE:", data);
 
-    if (data.error) {
-      return res.status(200).json({ reply: "⚠️ OpenAI Error: " + data.error.message });
-    }
-
-    const reply = data?.choices?.[0]?.message?.content;
-
-    if (!reply) {
-      return res.status(200).json({ reply: "⚠️ OpenAI رجّع رد بدون محتوى" });
-    }
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "⚠️ Gemini رجّع رد بدون محتوى";
 
     return res.status(200).json({ reply });
 
